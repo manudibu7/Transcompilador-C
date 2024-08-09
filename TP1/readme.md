@@ -2,7 +2,8 @@
 - Sintaxis y semántica de los Lenguajes, K2002.
 - Grupo: 14
 - Participantes:  
- **Rodrigo, Juan Manuel**:  
+
+**Rodrigo, Juan Manuel**:  
 Nombre git-hub : jrodrigoutn  
 Mail : jrodrigo@frba.utn.edu.ar  
   
