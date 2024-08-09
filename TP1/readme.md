@@ -1,8 +1,7 @@
-# TP1 Grupal 
-- Sintaxis y semántica de los Lenguajes.
-- K2002.
+# TP1: Conversión de velocidades
+- Sintaxis y semántica de los Lenguajes, K2002.
 - Grupo: 14
-- Participantes:   
+- Participantes:  
  **Rodrigo, Juan Manuel**:  
 Nombre git-hub : jrodrigoutn  
 Mail : jrodrigo@frba.utn.edu.ar  
