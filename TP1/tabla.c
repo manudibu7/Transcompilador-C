@@ -5,9 +5,9 @@ void estructuraTabla(double principio, double fin, double incremento){
     assert(fin >= principio);
     assert(incremento > 0);
 
-    printf("nudos \t km/h \n");
+    printf("|nudos          |km/h \n");
 
     for(double nudo = principio ; nudo <= fin ; nudo += incremento){
-        printf("%lf\t%lf\n",nudo,nudo_a_kilometro(nudo)); 
+        printf("|%lf\t|%lf\n",nudo,nudo_a_kilometro(nudo)); 
     }
 }

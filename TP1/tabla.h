@@ -5,7 +5,7 @@
 
 #include "conversion.h"
 
-void estructuraTabla(double principio, double fin, double incremento); // algo asi se me ocurre corte y en el main hacer un bucle
+void estructuraTabla(double principio, double fin, double incremento);
 
 
 #endif

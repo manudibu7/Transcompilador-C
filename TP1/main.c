@@ -25,13 +25,3 @@ int main(int argc, char *argv[]){
 }
 
 
-/*
-|--resultados.?? // Archivo con los resultados
-|-- main.c // Inicio del programa
-|-- makefile // Recetas para construir el ejecutable
-|-- conversion.c // Definiciones para convertir
-|-- conversion.h // Declaraciones para convertir
-|-- conversion.i // Preprocesado de conversion.c
-|-- tabla.c // Definiciones para armar la tabla
-|-- tabla.h // Declaraciones para armar la tabla
-*/
