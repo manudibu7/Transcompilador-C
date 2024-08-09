@@ -1,5 +1,5 @@
- 1- Muestre un comando que permita compilar todo el proyecto (sin el makefile) de 
-acuerdo a los lineamientos del curso (adherir estrictamente al estándar)
+ 1- Muestre un comando que permita compilar todo el proyecto (sin el makefile) de   
+acuerdo a los lineamientos del curso (adherir estrictamente al estándar)  
 
 gcc -std=c11 -pedantic conversion.c tabla.c main.c -o tabla_de_equivalencias
 
