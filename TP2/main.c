@@ -2,10 +2,12 @@
 #include "scanner.h"
 
 int main() {
-    Token token;
-    while (token != FDT){
-        token = scanner();
-        print_token(token);  
-    }
-    return 0;
+    Token t;
+
+    do {
+        t = obtener_token();
+        printf("%s\n", token_a_string(t));
+    } while (t.token!= FDT);
+
+    return 0;   
 }
