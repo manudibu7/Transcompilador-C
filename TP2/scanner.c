@@ -42,9 +42,9 @@ int obtener_columna(char c) {
         case '*': return 10;
         case '/': return 11;
         case '%': return 12;
-        case '\0': return 13; // FDT
-        case ' ': return 14;  // ESP
-        default: return 15;   // OTRO
+        case '\0': return 13; 
+        case ' ': return 14; 
+        default: return 15;   
     }
 }
 
@@ -54,6 +54,11 @@ Token obtener_token(){
     char c;
     int i = 0;
     t.lexema[i] = '\0';
+
+    //los espacios hay q ignorarlos
+    while (isspace(c)) {
+            c = getc(stdin); 
+        }
 
     while((c=getc(stdin)) != EOF){
         t.lexema[i++] = c;

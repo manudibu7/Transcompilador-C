@@ -22,11 +22,11 @@ typedef enum {
 
 
 typedef struct {
-    t_token token;         // Aquí puedes usar un entero para representar el tipo de token
-    char lexema[100];  // Un arreglo de caracteres para almacenar el lexema
+    t_token token;         
+    char lexema[100];  
 } Token;
 
-// Prototipos de funciones
+
 Token obtener_token();
 const char* token_a_string(Token token);
 
