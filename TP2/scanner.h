@@ -25,10 +25,7 @@ typedef struct {
     char lexema[100];  
 } Token;
 
-
 Token obtener_token();
 const char* token_a_string(Token token);
 
 #endif
-
-

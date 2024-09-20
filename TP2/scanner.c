@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 
-int tabla_transicion[18][16] =  {
+int tabla_transicion[19][16] =  {
     // L   D   +   -   (   )   ,   ;   :   =   *   /   %   fdt esp otro
     {  1,  3,  5,  6,  7,  8,  9, 10, 11, 14, 15, 16, 17, 13,  0, 14},  // 0-
     {  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2},  // 1
@@ -22,9 +22,9 @@ int tabla_transicion[18][16] =  {
     { 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99},  // 14+
     { 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99},  // 15+
     { 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99},  // 16+
-    { 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99}   // 17+
+    { 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99},  // 17+
+    { 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99}   // 18+
 };
-
 
 int obtener_columna(char c) {
     if (isalpha(c)) return 0; 
@@ -42,24 +42,31 @@ int obtener_columna(char c) {
         case '/': return 11;
         case '%': return 12;
         case '\0': return 13; 
-        case ' ': return 14; 
-        default: return 99;   
+        case ' ': case '\t': case '\n': case '\r': return 14; //blancos
+        default: return 15; 
     }
 }
 
-Token obtener_token(){
+Token obtener_token() {
     Token t;
     int estado = 0;
     char c;
     int i = 0;
     t.lexema[0] = '\0';
-    int j = 0;
 
-    while((c = fgetc(stdin)) != EOF){
+    do {
+        c = fgetc(stdin);
+        if (c == EOF) {
+            t.token = FDT;
+            t.lexema[0] = '\0';
+            return t;
+        }
+    } while (isspace(c));
+
+    while (1) {
         int col = obtener_columna(c);
 
-        // Verificar si la columna es válida
-        if (col == 99) {
+        if (col == 15) { 
             t.lexema[i++] = c;
             t.lexema[i] = '\0';
             t.token = ERROR_GENERAL;
@@ -69,105 +76,68 @@ Token obtener_token(){
         int nuevo_estado = tabla_transicion[estado][col];
 
         if (nuevo_estado == 99) {
-            ungetc(c, stdin);
-            t.lexema[i] = '\0'; 
+            t.lexema[i] = '\0';
             t.token = ERROR_GENERAL;
+            return t;
+        }
+
+        if (nuevo_estado == 2 || nuevo_estado == 4) {
+            t.lexema[i] = '\0';
+            t.token = (nuevo_estado == 2) ? IDENTIFICADOR : CONSTANTE;
+            if (c != EOF) ungetc(c, stdin); 
+            return t;
+        }
+
+        if ((nuevo_estado >= 5 && nuevo_estado <= 10) || (nuevo_estado >= 15 && nuevo_estado <= 17)) {
+            t.lexema[i++] = c;
+            t.lexema[i] = '\0';
+            switch (nuevo_estado) {
+                case 5: t.token = MAS; break;
+                case 6: t.token = MENOS; break;
+                case 7: t.token = PARENTESIS_ABRE; break;
+                case 8: t.token = PARENTESIS_CIERRA; break;
+                case 9: t.token = COMA; break;
+                case 10: t.token = PUNTO_Y_COMA; break;
+                case 15: t.token = MULTIPLICACION; break;
+                case 16: t.token = DIVISION; break;
+                case 17: t.token = PORCENTAJE; break;
+            }
+            return t;
+        }
+
+        if (nuevo_estado == 11) {
+            char next_char = fgetc(stdin);
+            if (next_char == '=') {
+                t.lexema[i++] = c;        
+                t.lexema[i++] = next_char; 
+                t.lexema[i] = '\0';
+                t.token = ASIGNACION;
+                return t;
+            } else {
+                if (next_char != EOF) ungetc(next_char, stdin);
+                t.lexema[i++] = c; 
+                t.lexema[i] = '\0';
+                t.token = ERROR_FALTA_IGUAL;
+                return t;
+            }
+        }
+
+        if (nuevo_estado == 14) {
+            t.lexema[i] = '\0';
+            t.token = ERROR_FALTA_DOS_PUNTOS;
             return t;
         }
 
         t.lexema[i++] = c;
         estado = nuevo_estado;
 
-        switch (estado) {
-            case 2: // Identificador
-                ungetc(c, stdin);
-                t.lexema[--i] = '\0';
-                t.token = IDENTIFICADOR;
-                return t;
-
-            case 4: // Constante
-                ungetc(c, stdin);
-                t.lexema[--i] = '\0';
-                t.token = CONSTANTE;
-                return t;
-
-            case 5: // Más
-                t.token = MAS;
-                t.lexema[i] = '\0';
-                return t;
-
-            case 6: // Menos
-                t.token = MENOS;
-                t.lexema[i] = '\0';
-                return t;
-
-            case 7: // Paréntesis abre
-                t.token = PARENTESIS_ABRE;
-                t.lexema[i] = '\0';
-                return t;
-
-            case 8: // Paréntesis cierra
-                t.token = PARENTESIS_CIERRA;
-                t.lexema[i] = '\0';
-                return t;
-
-            case 9: // Coma
-                t.token = COMA;
-                t.lexema[i] = '\0';
-                return t;
-
-            case 10: // Punto y coma
-                t.token = PUNTO_Y_COMA;
-                t.lexema[i] = '\0';
-                return t;
-
-            case 12: // Asignación
-                t.token = ASIGNACION;
-                t.lexema[i] = '\0';
-                return t;
-
-            case 14: // Error falta '='
-                t.token = ERROR_FALTA_IGUAL;
-                t.lexema[i] = '\0';
-                return t;
-
-            case 15: // Multiplicación
-                t.token = MULTIPLICACION;
-                t.lexema[i] = '\0';
-                return t;
-
-            case 16: // División
-                t.token = DIVISION;
-                t.lexema[i] = '\0';
-                return t;
-
-            case 17: // Porcentaje
-                t.token = PORCENTAJE;
-                t.lexema[i] = '\0';
-                return t;
-
-            case 13: // Fin de archivo
-                t.token = FDT;
-                t.lexema[i] = '\0';
-                return t;
-
-            default:
-                break;
+        c = fgetc(stdin);
+        if (c == EOF) {
+            t.lexema[i] = '\0';
+            t.token = FDT;
+            return t;
         }
-
     }
-
-    // Si se alcanza EOF fuera del bucle
-    if (c == EOF) {
-        t.token = FDT;
-        t.lexema[i] = '\0';
-        return t;
-    }
-
-    // Manejo adicional si es necesario
-    t.token = ERROR_GENERAL;
-    t.lexema[i] = '\0';
-    return t;
 }
 
 const char* token_a_string(Token t) {
@@ -191,38 +161,38 @@ const char* token_a_string(Token t) {
             snprintf(buffer, sizeof(buffer), "Parentesis que abre '%s'", t.lexema);
             break;
         case PARENTESIS_CIERRA:
-            snprintf(buffer, sizeof(buffer), "Parentesis que abre '%s'", t.lexema);
+            snprintf(buffer, sizeof(buffer), "Parentesis que cierra '%s'", t.lexema);
             break;
         case COMA:
             snprintf(buffer, sizeof(buffer), "Coma '%s'", t.lexema);
             break;
         case PUNTO_Y_COMA:
-            snprintf(buffer, sizeof(buffer), "Punto y Coma '%s'",t.lexema);
+            snprintf(buffer, sizeof(buffer), "Punto y coma '%s'", t.lexema);
             break;
         case ASIGNACION:
             snprintf(buffer, sizeof(buffer), "Asignacion '%s'", t.lexema);
             break;
         case MULTIPLICACION:
-            snprintf(buffer,sizeof(buffer), "Multiplicacion '%s'",t.lexema);
+            snprintf(buffer, sizeof(buffer), "Multiplicacion '%s'", t.lexema);
             break;
         case DIVISION:
-            snprintf(buffer,sizeof(buffer),"Division '%s'",t.lexema);
+            snprintf(buffer, sizeof(buffer), "Division '%s'", t.lexema);
             break;
         case PORCENTAJE:
-            snprintf(buffer,sizeof(buffer),"Porcentaje '%s'",t.lexema);
+            snprintf(buffer, sizeof(buffer), "Porcentaje '%s'", t.lexema);
             break;
         case FDT:
-            snprintf(buffer,sizeof(buffer),"Fin de archivo '%s'",t.lexema);
+            snprintf(buffer, sizeof(buffer), "Fin de archivo '%s'", t.lexema);
             break;
         case ERROR_GENERAL:
             snprintf(buffer, sizeof(buffer), "Error general '%s'", t.lexema);
             break;
         case ERROR_FALTA_IGUAL:
-            snprintf(buffer, sizeof(buffer), "Error: falta '=' '%s'", t.lexema);
+            snprintf(buffer, sizeof(buffer), "Error: falta '=' despues de ':' '%s'", t.lexema);
             break;
         case ERROR_FALTA_DOS_PUNTOS:
-            snprintf(buffer, sizeof(buffer), "Error: falta ':' '%s'", t.lexema);
-            break;   
+            snprintf(buffer, sizeof(buffer), "Error: falta ':' antes de '=' '%s'", t.lexema);
+            break;
         default:
             snprintf(buffer, sizeof(buffer), "Token desconocido '%s'", t.lexema);
             break;
@@ -230,3 +200,4 @@ const char* token_a_string(Token t) {
 
     return buffer;
 }
+
