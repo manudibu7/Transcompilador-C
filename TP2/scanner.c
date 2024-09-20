@@ -83,8 +83,14 @@ Token obtener_token() {
 
         if (nuevo_estado == 2 || nuevo_estado == 4) {
             t.lexema[i] = '\0';
-            t.token = (nuevo_estado == 2) ? IDENTIFICADOR : CONSTANTE;
-            if (c != EOF) ungetc(c, stdin); 
+             if (nuevo_estado == 2) {
+                t.token = IDENTIFICADOR;
+            } else {
+                t.token = CONSTANTE;
+            }
+            if (c != EOF) {
+                ungetc(c, stdin); 
+            }
             return t;
         }
 
