@@ -26,10 +26,9 @@ int tabla_transicion[18][16] =  {
 };
 
 
-
 int obtener_columna(char c) {
-    if (c >= 'a' && c <= 'z') return 0; // Letra
-    if (c >= '0' && c <= '9') return 1; // Dígito
+    if (isalpha(c)) return 0; 
+    if (isdigit(c)) return 1; 
     switch(c) {
         case '+': return 2;
         case '-': return 3;
@@ -44,7 +43,7 @@ int obtener_columna(char c) {
         case '%': return 12;
         case '\0': return 13; 
         case ' ': return 14; 
-        default: return 15;   
+        default: return 99;   
     }
 }
 
@@ -53,94 +52,122 @@ Token obtener_token(){
     int estado = 0;
     char c;
     int i = 0;
-    t.lexema[i] = '\0';
+    t.lexema[0] = '\0';
+    int j = 0;
 
-    //los espacios hay q ignorarlos
-    while (isspace(c)) {
-            c = getc(stdin); 
+    while((c = fgetc(stdin)) != EOF){
+        int col = obtener_columna(c);
+
+        // Verificar si la columna es válida
+        if (col == 99) {
+            t.lexema[i++] = c;
+            t.lexema[i] = '\0';
+            t.token = ERROR_GENERAL;
+            return t;
         }
 
-    while((c=getc(stdin)) != EOF){
-        t.lexema[i++] = c;
-        int nuevo_estado = tabla_transicion[estado][obtener_columna(c)];
+        int nuevo_estado = tabla_transicion[estado][col];
 
         if (nuevo_estado == 99) {
-            //ungetc(c,stdin);
+            ungetc(c, stdin);
             t.lexema[i] = '\0'; 
             t.token = ERROR_GENERAL;
             return t;
         }
 
         t.lexema[i++] = c;
-
         estado = nuevo_estado;
 
         switch (estado) {
-            case 2: 
-                ungetc(c,stdin);
+            case 2: // Identificador
+                ungetc(c, stdin);
+                t.lexema[--i] = '\0';
                 t.token = IDENTIFICADOR;
-                t.lexema[i] = '\0';
                 return t;
-            case 4: 
-                ungetc(c,stdin);
+
+            case 4: // Constante
+                ungetc(c, stdin);
+                t.lexema[--i] = '\0';
                 t.token = CONSTANTE;
+                return t;
+
+            case 5: // Más
+                t.token = MAS;
                 t.lexema[i] = '\0';
                 return t;
-            case 5:
-                t.token = MAS;
-                t.lexema[i++] = '\0';
-                return t;
-            case 6:
+
+            case 6: // Menos
                 t.token = MENOS;
-                t.lexema[i++] = '\0';
+                t.lexema[i] = '\0';
                 return t;
-            case 7: 
+
+            case 7: // Paréntesis abre
                 t.token = PARENTESIS_ABRE;
-                t.lexema[i++] = '\0';
+                t.lexema[i] = '\0';
                 return t;
-            case 8:
+
+            case 8: // Paréntesis cierra
                 t.token = PARENTESIS_CIERRA;
-                t.lexema[i++] = '\0';
+                t.lexema[i] = '\0';
                 return t;
-            case 9:
+
+            case 9: // Coma
                 t.token = COMA;
-                t.lexema[i++] = '\0';
+                t.lexema[i] = '\0';
                 return t;
-            case 10:
+
+            case 10: // Punto y coma
                 t.token = PUNTO_Y_COMA;
-                t.lexema[i++] = '\0';
+                t.lexema[i] = '\0';
                 return t;
-            case 12:
+
+            case 12: // Asignación
                 t.token = ASIGNACION;
-                t.lexema[i++] = '\0';
+                t.lexema[i] = '\0';
                 return t;
-            case 14:
-               // ungetc(c,stdin);
+
+            case 14: // Error falta '='
                 t.token = ERROR_FALTA_IGUAL;
                 t.lexema[i] = '\0';
                 return t;
-            case 15:
+
+            case 15: // Multiplicación
                 t.token = MULTIPLICACION;
-                t.lexema[i++] = '\0';
+                t.lexema[i] = '\0';
                 return t;
-            case 16:
+
+            case 16: // División
                 t.token = DIVISION;
-                t.lexema[i++] = '\0';
+                t.lexema[i] = '\0';
                 return t;
-            case 17:
+
+            case 17: // Porcentaje
                 t.token = PORCENTAJE;
-                t.lexema[i++] = '\0';
+                t.lexema[i] = '\0';
                 return t;
-            case 13:
+
+            case 13: // Fin de archivo
                 t.token = FDT;
-                t.lexema[i++] = '\0';
+                t.lexema[i] = '\0';
                 return t;
+
             default:
                 break;
         }
+
     }
-    
-    
+
+    // Si se alcanza EOF fuera del bucle
+    if (c == EOF) {
+        t.token = FDT;
+        t.lexema[i] = '\0';
+        return t;
+    }
+
+    // Manejo adicional si es necesario
+    t.token = ERROR_GENERAL;
+    t.lexema[i] = '\0';
+    return t;
 }
 
 const char* token_a_string(Token t) {

@@ -20,7 +20,6 @@ typedef enum {
     ERROR_FALTA_DOS_PUNTOS
 } t_token;
 
-
 typedef struct {
     t_token token;         
     char lexema[100];  
@@ -30,6 +29,6 @@ typedef struct {
 Token obtener_token();
 const char* token_a_string(Token token);
 
-#endif // SCANNER_H
+#endif
 
 

@@ -7,7 +7,7 @@ int main() {
     do {
         t = obtener_token();
         printf("%s\n", token_a_string(t));
-    } while (t.token!= FDT);
+    } while (t.token != FDT);
 
     return 0;   
 }
