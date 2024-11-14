@@ -21,18 +21,22 @@
 "/" { return DIVISION;}
 "%" { return PORCENTAJE;}
 
-[a-zA-Z][a-zA-Z0-9]* {return IDENTIFICADOR; }
+[a-zA-Z][a-zA-Z0-9]* {return IDENTIFICADOR;}
 
-[0-9]+ { return CONSTANTE; }
+[0-9]+ {return CONSTANTE;}
 
-"//".* {   }
+"//".* {}
+[ ] {}
+[\t\n ]+ {}
 
-[\t\n]+ {   }
-
-[@!]+ {printf("Error lexico: cadena desconocida %s", yytext); return ERROR;} //revisar caracteres invalidos
-[0-9]+[a-zA-Z]+ {printf("Error lexico: constante invalida %s", yytext); return ERROR;}
-[a-zA-Z][a-zA-Z0-9]*[^a-zA-Z0-9] { printf("Error lexico: identificador invalido: %s", yytext); return ERROR;}
+[@!:#=$]+ {printf("Error lexico: cadena desconocida %s\n", yytext); return ERROR;} //revisar caracteres invalidos
+[a-zA-Z][a-zA-Z0-9]*[@!:#=$]+[a-zA-Z0-9@!:#=$]* {printf("Error lexico: identificador invalido %s\n", yytext); return ERROR;}
+[0-9]+[a-zA-Z][a-zA-Z0-9]* {printf("Error lexico: constante invalida %s\n", yytext); return ERROR;}
 
 <<EOF>> {return FDT;}
 
 %%
+
+int yywrap(void){
+    return 1;
+}
