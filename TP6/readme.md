@@ -1,4 +1,4 @@
-# TP5: Parser usando bison
+#  Trabajo Práctico Nº 6 – Transpiler
 - Sintaxis y semántica de los Lenguajes, K2002.
 - Grupo: 14
 - Participantes:  
