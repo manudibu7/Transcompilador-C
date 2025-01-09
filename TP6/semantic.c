@@ -1,73 +1,55 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include "symbol.h"
 #include "semantic.h"
+#include "symbol.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-int variablesTemporales = 0;
+static int contadorTemporales = 1;
 
-void declarar(char* identificador){
-	printf("Reserve %s, 4\n",identificador);
-}
-
-char* nuevoTemporal(){
-	char nuevoTemporal[10];
-	variablesTemporales+=1;
-	sprintf(nuevoTemporal, "Temp#%d", variablesTemporales);
-	declarar(nuevoTemporal);
-	return strdup(nuevoTemporal);
-}
-
-
-char* menosUnario(char* variable){
-  	char* aux;
-	aux = nuevoTemporal();
-	printf("NEG %s, %s\n", variable, aux);
-	return aux;
+bool declararVariable(const char *nombre) {
+    if (!agregarSimbolo(nombre)) {
+        fprintf(stderr, "// Error semántico: La variable '%s' ya está declarada\n", nombre);
+        return true;
+    }
+    printf("int %s;\n", nombre);
+    return false;
 }
 
-
-void asignar(char* expresion, char* identificador){
-	printf("Store %s in %s \n", expresion, identificador);
+bool verificarVariableDeclarada(const char *nombre) {
+    if (!existeSimbolo(nombre)) {
+        fprintf(stderr, "// Error semántico: La variable '%s' no está declarada\n", nombre);
+        return true;
+    }
+    return false;
 }
 
-void empezar(){
-	printf("Load rtlib,\n");
-}
-void finalizar(){
-	printf("Exit\n");
+void generarAsignacion(const char *variable, const char *expresion) {
+    printf("%s = %s;\n", variable, expresion);
 }
 
-void leer(char* identificador){
-	printf("Read %s, Integer\n", identificador);
+void generarLectura(const char *variable) {
+    printf("scanf(\"%%d\", &%s);\n", variable);
 }
 
-void escribir(char* identificador){
-	printf("Write %s, Integer\n", identificador);
+void generarEscritura(const char *expresion) {
+    printf("printf(\"%%d\\n\", %s);\n", expresion);
 }
 
-char* sumar(char *identificador1, char *identificador2){
-	char* salida;
-	salida = nuevoTemporal();
-	printf("ADD %s, %s, %s\n",identificador1,identificador2,salida);
-	return salida;
+char *generarVariableTemporal() {
+    char *nombreTemporal = malloc(20);
+    if (!nombreTemporal) {
+        fprintf(stderr, "// Error: No se pudo asignar memoria para una variable temporal\n");
+        exit(EXIT_FAILURE);
+    }
+    snprintf(nombreTemporal, 20, "_Temp%d", contadorTemporales++);
+    printf("int %s;\n", nombreTemporal);
+    return nombreTemporal;
 }
-char* restar(char *identificador1, char *identificador2){
-	char* salida;
-	salida = nuevoTemporal();
-	printf("SUBS %s, %s, %s\n",identificador1,identificador2,salida);
-	return salida;
+
+char *generarOperacionInfija(const char *izquierda, const char *operador, const char *derecha) {
+    char *temporal = generarVariableTemporal();
+    printf("%s = %s %s %s;\n", temporal, izquierda, operador, derecha);
+    return temporal;
 }
-char* multiplicar(char *identificador1, char *identificador2){
-	char* salida;
-	salida = nuevoTemporal();
-	printf("MULT %s, %s, %s\n",identificador1,identificador2,salida);
-	return salida;
-}
-char* dividir(char *identificador1, char *identificador2){
-	char* salida;
-	salida = nuevoTemporal();
-	printf("DIV %s, %s, %s\n",identificador1,identificador2,salida);
-	return salida;
-}
+
 

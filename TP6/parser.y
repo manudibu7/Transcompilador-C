@@ -1,85 +1,160 @@
 %{
 #include <stdio.h>
-#include "scanner.h"
+#include <stdlib.h>
+#include <string.h>
 #include "symbol.h"
 #include "semantic.h"
 
-void mostrarError(char *id, int e);
-void errorYaDeclarado(char* identificador);
-void errorNoDeclarado(char* identificador);
-extern int errlex; 	/* Contador de Errores Léxicos */
-extern int semerrs;
+// varialbes para el conteo de errores
+int erroresLexicos = 0;
+int erroresSintacticos = 0;
+int erroresSemanticos = 0;
+
+// linea actual para los mensajes de error
+extern int yylineno;
 %}
 
-%define api.value.type{char *}
+%code provides {
+    void yyerror(const char *mensaje);
+    int yylex();
+    extern int erroresLexicos;
+    extern int erroresSintacticos;
+    extern int erroresSemanticos;
+    extern int yylineno;
+}
 
-%defines "parser.h"
-%output "parser.c"
+%start programa
 
-%start program
-%define parse.error verbose
+%token PROGRAMA ENTERO LEER ESCRIBIR FIN
+%token ASIGNACION '+' '-' '*' '/' '%'
+%token IDENTIFICADOR CONSTANTE
+%token PARENTESIS_ABRE PARENTESIS_CIERRA ',' ';'
 
-%token PROGRAMA FINPROG DECLARAR LEER ESCRIBIR CONSTANTE IDENTIFICADOR 
-%token ASIGNACION "<-"
-
-%left  '-'  '+'
-%left  '*'  '/'
-%precedence NEG  
+%right UMINUS
+%left '+' '-'
+%left '*' '/' '%'
 
 %%
 
-program: PROGRAMA {empezar();} contenidoPrograma FINPROG {finalizar(); if (errlex > 0 || yynerrs > 0 || semerrs > 0) YYABORT; else YYACCEPT;};
+programa:
+    PROGRAMA IDENTIFICADOR {
+        printf("#include <stdio.h>\n");
+        printf("int main() {\n");
+        printf("// Programa: %s\n", $2);
+    }
+    listaSentencias FIN {
+        printf("return 0;\n}\n");
+        limpiarTabla();  // Limpiar la tabla de símbolos al final
+    }
+;
 
-contenidoPrograma: 		contenidoPrograma sentencia
-						| %empty;
-	
+listaSentencias:
+    sentencia
+    | listaSentencias sentencia
+;
 
+sentencia:
+    ENTERO IDENTIFICADOR ';' {
+        if (declararVariable($2)) {
+            erroresSemanticos++;
+            YYERROR;
+        }
+    }
+    | IDENTIFICADOR ASIGNACION expresion ';' {
+        if (verificarVariableDeclarada($1)) {
+            erroresSemanticos++;
+            YYERROR;
+        }
+        generarAsignacion($1, $3);
+    }
+    | LEER PARENTESIS_ABRE listaIdentificadores PARENTESIS_CIERRA ';' {
+        generarLectura($3);
+    }
+    | ESCRIBIR PARENTESIS_ABRE listaExpresiones PARENTESIS_CIERRA ';' {
+        generarEscritura($3);
+    }
+    | error ';' {
+        printf("// Error sintáctico en la línea %d\n", yylineno);
+        erroresSintacticos++;
+        YYERROR;
+    }
+;
 
+listaIdentificadores:
+    IDENTIFICADOR {
+        if (verificarVariableDeclarada($1)) {
+            erroresSemanticos++;
+            YYERROR;
+        }
+        $$ = $1;
+    }
+    | listaIdentificadores ',' IDENTIFICADOR {
+        if (verificarVariableDeclarada($3)) {
+            erroresSemanticos++;
+            YYERROR;
+        }
+        $$ = $3;
+    }
+;
 
-sentencia:				DECLARAR IDENTIFICADOR ';' {if(!existeVariable($2)){
-                                                                declarar($2);
-                                                                agregarVariable($2);
-                                                                } else {errorYaDeclarado($2); YYERROR;};}
-						| LEER '('listaDeIdentificadores')' ';' 	
-                        | ESCRIBIR '('listaDeExpresiones')' ';' 
-                        | identificador ASIGNACION unaExpresion ';'{asignar($3,$1);}
-						| error';';
+listaExpresiones:
+    expresion {
+        $$ = $1;
+    }
+    | listaExpresiones ',' expresion {
+        $$ = generarOperacionInfija($1, ",", $3);
+    }
+;
 
+expresion:
+    termino {
+        $$ = $1;
+    }
+    | expresion '+' termino {
+        $$ = generarOperacionInfija($1, "+", $3);
+    }
+    | expresion '-' termino {
+        $$ = generarOperacionInfija($1, "-", $3);
+    }
+;
 
-listaDeIdentificadores: identificador 	{leer($1);}							
-                        | listaDeIdentificadores','identificador  {leer($3);};	
-                        
-listaDeExpresiones: unaExpresion 							{escribir($1);}
-					| listaDeExpresiones','unaExpresion  	{escribir($3);};  
-  
-unaExpresion : 		  	valor
-                        | '-'valor %prec NEG			{$$ = menosUnario($2);}
-                        | '('unaExpresion')' 			{$$ = $2;}
-                        | unaExpresion '+' unaExpresion {$$ = sumar($1, $3);}
-                        | unaExpresion '-' unaExpresion {$$ = restar($1, $3);}
-                        | unaExpresion '*' unaExpresion {$$ = multiplicar($1, $3);}
-                        | unaExpresion '/' unaExpresion {$$ = dividir($1, $3);}
-						| '(' error ')';
-						
-valor : 		  		identificador
-                        | CONSTANTE;
+termino:
+    primaria {
+        $$ = $1;
+    }
+    | termino '*' primaria {
+        $$ = generarOperacionInfija($1, "*", $3);
+    }
+    | termino '/' primaria {
+        $$ = generarOperacionInfija($1, "/", $3);
+    }
+    | termino '%' primaria {
+        $$ = generarOperacionInfija($1, "%", $3);
+    }
+;
 
-identificador: IDENTIFICADOR {if(!existeVariable($1)){errorNoDeclarado($1); YYERROR;}else $$ = $1;};
+primaria:
+    IDENTIFICADOR {
+        if (verificarVariableDeclarada($1)) {
+            erroresSemanticos++;
+            YYERROR;
+        }
+        $$ = $1;
+    }
+    | CONSTANTE {
+        $$ = $1;
+    }
+    | PARENTESIS_ABRE expresion PARENTESIS_CIERRA {
+        $$ = $2;
+    }
+    | '-' primaria %prec UMINUS {
+        $$ = generarOperacionInfija("0", "-", $2);
+    }
+;
 
 %%
 
-/* Informa la ocurrencia de un error */
-void yyerror(const char *s){
-	printf("Línea #%d -> %s\n", yylineno, s);
-	return;
-}
-
-void errorYaDeclarado(char* identificador){
-	printf("Línea #%d -> Error semántico: El identificador %s ya ha sido declarado.\n",yylineno,identificador);
-	semerrs++;
-}
-
-void errorNoDeclarado(char* identificador){
-	printf("Línea #%d -> Error semántico: El identificador %s no ha sido declarado previamente.\n",yylineno,identificador);
-	semerrs++;
+void yyerror(const char *mensaje) {
+    printf("// Error en la línea %d: %s\n", yylineno, mensaje);
+    erroresSintacticos++;
 }

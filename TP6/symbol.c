@@ -1,24 +1,45 @@
+#include "symbol.h"
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-#include "symbol.h"
 
-struct tablaSimbolos {
-	char* variables[200];
-	int indice;
-}tablaDeSimbolos =  {.indice = 0};
+typedef struct Simbolo {
+    char *nombre;
+    struct Simbolo *sig;
+} Simbolo;
 
-void agregarVariable(char* variable){
-	tablaDeSimbolos.variables[tablaDeSimbolos.indice]=variable;
-	tablaDeSimbolos.indice++;
+static Simbolo *tablaDeSimbolos = NULL;
+
+bool agregarSimbolo(const char *nombre) {
+    if (existeSimbolo(nombre)) {
+        return false;
+    }
+    Simbolo *nuevoSimbolo = malloc(sizeof(Simbolo));
+    nuevoSimbolo->nombre = strdup(nombre);
+    nuevoSimbolo->sig = tablaDeSimbolos;
+    tablaDeSimbolos = nuevoSimbolo;
+    return true;
 }
 
-bool existeVariable(char* variable){
-  for(int i=0; i<tablaDeSimbolos.indice; i++){
-    char* variableActual = tablaDeSimbolos.variables[i];
-    if(strcmp(variableActual, variable) == 0 )
-      return true;
-  }
-  return false;
+bool existeSimbolo(const char *nombre) {
+    Simbolo *actual = tablaDeSimbolos;
+    while (actual != NULL) {
+        if (strcmp(actual->nombre, nombre) == 0) {
+            return true;
+        }
+        actual = actual->sig;
+    }
+    return false;
 }
+
+void limpiarTabla() {
+    Simbolo *actual = tablaDeSimbolos;
+    while (actual != NULL) {
+        Simbolo *aLiberar = actual;
+        actual = actual->sig;
+        free(aLiberar->nombre);
+        free(aLiberar);
+    }
+    tablaDeSimbolos = NULL;
+}
+

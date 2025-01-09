@@ -1,19 +1,14 @@
-#ifndef SEMANITC_H
+#ifndef SEMANTIC_H
 #define SEMANTIC_H
 
 #include <stdbool.h>
 
-char* nuevoTemporal();
-void asignar(char* expresion, char* identificador);
-void empezar();
-void finalizar();
-void leer(char* identificador);
-void escribir(char* identificador);
-char* sumar(char *identificador1, char *identificador2);
-char* restar(char *identificador1, char *identificador2);
-char* multiplicar(char *identificador1, char *identificador2);
-char* dividir(char *identificador1, char *identificador2);
-void declarar(char* identificador);
-char* menosUnario(char* variable);
+bool declararVariable(const char *nombre);
+bool verificarVariableDeclarada(const char *nombre);
+void generarAsignacion(const char *variable, const char *expresion);
+void generarLectura(const char *variable);
+void generarEscritura(const char *expresion);
+char *generarVariableTemporal();
+char *generarOperacionInfija(const char *izquierda, const char *operador, const char *derecha);
 
 #endif
