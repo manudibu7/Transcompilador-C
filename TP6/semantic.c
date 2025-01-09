@@ -4,22 +4,6 @@
 #include "symbol.h"
 #include "semantic.h"
 
-/*Códigos del seudo ensamblador:
-• Al declarar una variable reservaremos 4 bytes de memoria con Reserve y dos parámetros, el
-nombre de la variable y la cantidad de bytes a reservar. OK
-• Load, para la carga de la biblioteca en tiempo de ejecución, debe quedar: Load rtlib,, OK
-• ADD, para la suma OK
-• SUB, para la resta OK
-• MUL, para la multiplicación OK
-• DIV, para la división OK
-• NEG, para el menos unario. OJO hay que usar precedencia de contexto. Generaremos algo
-como: NEG Var,,VarNeg es decir, el segundo operando lo dejamos en blanco y guardamos
-(consistentemente con el resto de las operaciones) en el tercer operando
-• Store, para la asignación OK
-• Read, para la lectura de un identificador OK
-• Write, para la escritura de una expresión OK
-• Exit, para frenar el programa OK*/
-
 int variablesTemporales = 0;
 
 void declarar(char* identificador){
