@@ -1,96 +1,77 @@
 %code top{
     #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
-    int errlex = 0;
-    int errsin = 0;
-    extern int yylineno;
+    #include "scanner.h"
 }
 
-%code provides {
-    void yyerror(const char *s);
-    int yylex();
-    extern int errlex;
-    extern int errsin;
-    extern int yylineno;
+%code provides{
+    void yyerror(const char *);
+    extern int yylexerrs;
 }
 
 %defines "parser.h"
 %output "parser.c"
-%define api.value.type {char*}
-%define parse.error detailed
+
+%define api.value.type {char *}
+%define parse.error verbose
+
+%token IDENTIFICADOR CONSTANTE PROGRAMA ENTERO LEER ESCRIBIR FIN_PROGRAMA ASIGNACION
 
 %start programa
 
-%token PROGRAMA ENTERO LEER ESCRIBIR FIN
-%token ASIGNACION '+' '-' '*' '/' '%'
-%token IDENTIFICADOR CONSTANTE
-%token PARENTESIS_ABRE PARENTESIS_CIERRA ',' ';'
-
-%right UMINUS
 %left '+' '-'
 %left '*' '/' '%'
 
+%precedence NEG   /* negation--unary minus */
+
 %%
 
-programa:
-    PROGRAMA IDENTIFICADOR { 
-        printf("Programa: %s\n", $2);
-    } listaSentencias FIN {
-        if(errsin > 0 || errlex > 0){printf("Errores de compilacion\n");}
-        else{printf("Compilación terminada con éxito\n");}
-        printf("Errores sintacticos: %d - Errores lexicos: %d\n", errsin, errlex);
-    }
-;
+programa
+    : PROGRAMA IDENTIFICADOR { printf("programa %s\n", $IDENTIFICADOR); } logica FIN_PROGRAMA { if (yynerrs || yylexerrs) YYABORT; else YYACCEPT; }
+    ;
 
-listaSentencias:
-    sentencia
-    | listaSentencias sentencia
-;
+logica
+    : sentencia
+    | logica sentencia
+    ;
 
-sentencia:
-    ENTERO IDENTIFICADOR ';' {printf("Sentencia declaracion: %s\n", $2);}
-    | IDENTIFICADOR ASIGNACION expresion ';' {printf("Sentencia asignacion\n");}
-    | LEER PARENTESIS_ABRE listaIdentificadores PARENTESIS_CIERRA ';' {printf("Sentencia leer\n");}
-    | ESCRIBIR PARENTESIS_ABRE listaExpresiones PARENTESIS_CIERRA ';' {printf("Sentencia escribir\n");}
+sentencia
+    : identificador ASIGNACION expresion ';' { printf("Sentencia asignacion: \n", yylval);, free(yylval) }
+    | ENTERO IDENTIFICADOR ';' { printf("Sentencia declaracion: %s\n", yylval); free(yylval); }
+    | LEER '(' lista-de-identificadores ')' ';' { printf("Sentencia leer\n"); }
+    | ESCRIBIR '(' lista-de-expresiones ')' ';' { printf("Sentencia escribir\n"); }
     | error ';'
-;
+    ;
 
-listaIdentificadores:
-    IDENTIFICADOR
-    | listaIdentificadores ',' IDENTIFICADOR
-;
+lista-de-identificadores
+    : identificador
+    | lista-de-identificadores ',' IDENTIFICADOR
+    ;
 
-listaExpresiones:
-    expresion
-    | listaExpresiones ',' expresion
-;
+lista-de-expresiones
+    : expresion
+    | lista-de-expresiones ',' expresion
+    ;
 
-expresion:
-    termino
-    | expresion '+' termino {printf("operacion de suma\n");}
-    | expresion '-' termino {printf("operacion de resta\n");}
-;
-
-termino:
-    primaria
-    | termino '*' primaria {printf("operacion de multiplicacion\n");}
-    | termino '/' primaria {printf("operacion de division\n");}
-    | termino '%' primaria {printf("operacion de modulo\n");}
-;
-
-primaria:
-    IDENTIFICADOR
+expresion
+    : identificador
     | CONSTANTE
-    | PARENTESIS_ABRE {printf("parentesis abre\n");}
-        expresion 
-        PARENTESIS_CIERRA {printf("parentesis cierra\n");}
-    | '-' primaria %prec UMINUS {printf("operacion de inversion\n");}
-;
+    | '(' expresion ')' { printf("abre parentesis\n"); printf("cierra parentesis\n"); }
+    | '-' expresion %prec NEG { printf("negacion\n"); }
+    | expresion '*' expresion { printf("multiplicacion\n"); }
+    | expresion '/' expresion { printf("division\n"); }
+    | expresion '%' expresion { printf("modulo\n"); }
+    | expresion '+' expresion { printf("suma\n"); }
+    | expresion '-' expresion { printf("resta\n"); }
+    ;
+
+identificador
+    : IDENTIFICADOR
+    ;
 
 %%
 
-void yyerror(const char *s) {
-    printf("línea #%d: %s\n", yylineno, s);
-    errsin++;
+/* Informa la ocurrencia de un error. */
+void yyerror(const char *s){
+	printf("línea #%d: %s\n", yylineno, s);
+	return;
 }
