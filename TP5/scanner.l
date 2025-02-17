@@ -28,7 +28,7 @@ operador_secundario [*/%]
 identificador {letra}({letra}|{digito})*
 constante {digito}+
 palabra_reservada programa|entero|leer|escribir|fin-programa
-asignacion <<
+asignacion :=
 
 %%
 
@@ -40,7 +40,7 @@ asignacion <<
 
 "escribir" { return ESCRIBIR; }
 
-"fin-programa" { return FIN_PROGRAMA; }
+"fin" { return FIN_PROGRAMA; }
 
 {espacio_en_blanco}+ {} /* ignorar nuevas lineas, tabuladores y espacios */
 

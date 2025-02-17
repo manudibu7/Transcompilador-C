@@ -21,7 +21,7 @@
 %left '+' '-'
 %left '*' '/' '%'
 
-%precedence NEG   /* negation--unary minus */
+%precedence NEG   
 
 %%
 
@@ -35,7 +35,7 @@ logica
     ;
 
 sentencia
-    : identificador ASIGNACION expresion ';' { printf("Sentencia asignacion: \n", yylval);, free(yylval) }
+    : identificador ASIGNACION expresion ';' { printf("Sentencia asignacion: %s\n", yylval); free(yylval); }
     | ENTERO IDENTIFICADOR ';' { printf("Sentencia declaracion: %s\n", yylval); free(yylval); }
     | LEER '(' lista-de-identificadores ')' ';' { printf("Sentencia leer\n"); }
     | ESCRIBIR '(' lista-de-expresiones ')' ';' { printf("Sentencia escribir\n"); }
@@ -72,6 +72,6 @@ identificador
 
 /* Informa la ocurrencia de un error. */
 void yyerror(const char *s){
-	printf("línea #%d: %s\n", yylineno, s);
+	printf("linea #%d: %s\n", yylineno, s);
 	return;
 }

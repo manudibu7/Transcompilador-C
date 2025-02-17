@@ -15,17 +15,17 @@ int main(void)
     switch( yyparse() )
     {
         case YYACCEPT:
-            printf("Compilación terminada con éxito\n");
+            printf("Compilacion terminada con exito\n");
             break;
         case YYABORT:
-            printf("Errores de compilación\n");
+            printf("Errores de compilacion\n");
             break;
         case YYNOMEM:
             printf("Memoria insuficiente\n");
             break;
     }
 
-    printf("Errores sintácticos: %d - Errores léxicos: %d\n", yynerrs, yylexerrs);
+    printf("Errores sintacticos: %d - Errores lexicos: %d\n", yynerrs, yylexerrs);
 
     return 0;
 }
