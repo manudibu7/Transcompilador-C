@@ -1,55 +1,97 @@
-#include "semantic.h"
-#include "symbol.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
+#include "semantic.h"
 
-static int contadorTemporales = 1;
+extern simbolo_t *tabla_de_simbolos;
 
-bool declararVariable(const char *nombre) {
-    if (!agregarSimbolo(nombre)) {
-        fprintf(stderr, "// Error semántico: La variable '%s' ya está declarada\n", nombre);
-        return true;
+static int cont_temp = 1;
+
+static char *nuevo_temporal(void) {
+    char buffer[64];
+    sprintf(buffer, "_Temp%d", cont_temp++);
+    char *temp = strdup(buffer);
+    // Imprime la declaración de la variable temporal.
+    printf("    int %s;\n", temp);
+    return temp;
+}
+
+void inicializar(char *nom_programa) {
+    // Reinicializa la tabla de símbolos.
+    tabla_de_simbolos = NULL;
+    
+    // Imprime la cabecera del programa.
+    printf("#include <stdio.h>\n\n");
+    printf("int main(void) {\n");
+    
+    // Se podría utilizar 'nom_programa' para algún tratamiento especial.
+    free(nom_programa);
+}
+
+void finalizar(void) {
+    borrar_simbolos(&tabla_de_simbolos);
+    printf("    return 0;\n");
+    printf("}\n");
+}
+
+int declarar(char *identificador) {
+    if (contiene_simbolo(tabla_de_simbolos, identificador) != 0) {
+        simbolo_t *simbolo = nuevo_simbolo(identificador);
+        agregar_simbolo(&tabla_de_simbolos, simbolo);
+        printf("    int %s;\n", identificador);
+        return 0;
     }
-    printf("int %s;\n", nombre);
-    return false;
+    yysemerrs++;
+    fprintf(stderr, "Error semantico: identificador %s ya declarado\n", identificador);
+    return -1;
 }
 
-bool verificarVariableDeclarada(const char *nombre) {
-    if (!existeSimbolo(nombre)) {
-        fprintf(stderr, "// Error semántico: La variable '%s' no está declarada\n", nombre);
-        return true;
+int declarado(char *identificador) {
+    if (contiene_simbolo(tabla_de_simbolos, identificador) == 0)
+        return 1;
+    yysemerrs++;
+    fprintf(stderr, "Error semantico: identificador %s NO declarado\n", identificador);
+    return -1;
+}
+
+void asignar(char *id, char *expr) {
+    if (contiene_simbolo(tabla_de_simbolos, id) == 0) {
+        printf("    %s = %s;\n", id, expr);
+    } else {
+        yysemerrs++;
+        fprintf(stderr, "Error semantico: identificador %s NO declarado\n", id);
     }
-    return false;
+    free(id);
+    free(expr);
 }
 
-void generarAsignacion(const char *variable, const char *expresion) {
-    printf("%s = %s;\n", variable, expresion);
-}
-
-void generarLectura(const char *variable) {
-    printf("scanf(\"%%d\", &%s);\n", variable);
-}
-
-void generarEscritura(const char *expresion) {
-    printf("printf(\"%%d\\n\", %s);\n", expresion);
-}
-
-char *generarVariableTemporal() {
-    char *nombreTemporal = malloc(20);
-    if (!nombreTemporal) {
-        fprintf(stderr, "// Error: No se pudo asignar memoria para una variable temporal\n");
-        exit(EXIT_FAILURE);
+void leer(char *id) {
+    if (contiene_simbolo(tabla_de_simbolos, id) == 0) {
+        printf("    scanf(\"%%d\", &%s);\n", id);
+    } else {
+        yysemerrs++;
+        fprintf(stderr, "Error semantico: identificador %s NO declarado\n", id);
     }
-    snprintf(nombreTemporal, 20, "_Temp%d", contadorTemporales++);
-    printf("int %s;\n", nombreTemporal);
-    return nombreTemporal;
+    free(id);
 }
 
-char *generarOperacionInfija(const char *izquierda, const char *operador, const char *derecha) {
-    char *temporal = generarVariableTemporal();
-    printf("%s = %s %s %s;\n", temporal, izquierda, operador, derecha);
-    return temporal;
+void escribir(char *expr) {
+    printf("    printf(\"%%d\\n\", %s);\n", expr);
+    free(expr);
 }
 
+char *operar(char *opIzq, char op, char *opDer) {
+    char *temp = nuevo_temporal();
+    printf("    %s = %s %c %s;\n", temp, opIzq, op, opDer);
+    free(opIzq);
+    free(opDer);
+    return temp;
+}
 
+char *negar(char *expr) {
+    char *temp = nuevo_temporal();
+    printf("    %s = -%s;\n", temp, expr);
+    free(expr);
+    return temp;
+}

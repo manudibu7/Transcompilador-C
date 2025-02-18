@@ -1,45 +1,47 @@
-#include "symbol.h"
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
-typedef struct Simbolo {
-    char *nombre;
-    struct Simbolo *sig;
-} Simbolo;
+#include "symbol.h"
 
-static Simbolo *tablaDeSimbolos = NULL;
-
-bool agregarSimbolo(const char *nombre) {
-    if (existeSimbolo(nombre)) {
-        return false;
-    }
-    Simbolo *nuevoSimbolo = malloc(sizeof(Simbolo));
-    nuevoSimbolo->nombre = strdup(nombre);
-    nuevoSimbolo->sig = tablaDeSimbolos;
-    tablaDeSimbolos = nuevoSimbolo;
-    return true;
+simbolo_t *nuevo_simbolo(char *valor)
+{
+    simbolo_t *simbolo = malloc(sizeof(simbolo_t));
+    simbolo->valor = malloc(sizeof(char) * (strlen(valor) + 1));
+    strcpy(simbolo->valor, valor);
+    simbolo->sig = NULL;
+    return simbolo;
 }
 
-bool existeSimbolo(const char *nombre) {
-    Simbolo *actual = tablaDeSimbolos;
-    while (actual != NULL) {
-        if (strcmp(actual->nombre, nombre) == 0) {
-            return true;
-        }
-        actual = actual->sig;
-    }
-    return false;
+void agregar_simbolo(simbolo_t **lista, simbolo_t *simbolo)
+{
+    simbolo->sig = *lista;
+    *lista = simbolo;
 }
 
-void limpiarTabla() {
-    Simbolo *actual = tablaDeSimbolos;
-    while (actual != NULL) {
-        Simbolo *aLiberar = actual;
-        actual = actual->sig;
-        free(aLiberar->nombre);
-        free(aLiberar);
+void borrar_simbolos(simbolo_t **lista)
+{
+    simbolo_t *actual = *lista;
+    simbolo_t *sig;
+
+    while (actual != NULL)
+    {
+        sig = actual->sig;
+        free(actual);
+        actual = sig;
     }
-    tablaDeSimbolos = NULL;
+
+    *lista = NULL;
 }
 
+int contiene_simbolo(simbolo_t *lista, char *valor)
+{
+    simbolo_t *aux;
+
+    for (aux = lista; aux != NULL; aux = aux->sig)
+    {
+        if (strcmp(aux->valor, valor) == 0)
+            return 0;
+    }
+    return -1;
+}

@@ -1,47 +1,82 @@
+
 %{
+
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "parser.h"
 
-int erroresLexicos = 0;  // Contador de errores léxicos
-char buffer[200];
-extern int yylineno;  // Línea actual para mensajes de error
+#define ERROR_LEXICO(mensaje) yylexerrs++; char buffer[128]; sprintf(buffer, "Error lexico: %s: %s", mensaje, yytext ); yyerror(buffer);
+
 %}
 
+%option outfile="scanner.c"
+%option header-file="scanner.h"
+
+%option noyywrap
+%option nounput
+%option noinput
 %option yylineno
 
-%%
+espacio_en_blanco [[:space:]]
+comentario \/\/[^\n]*
+caracter_invalido [~`!@#$^&\[}[\]'"?\\>]
 
-"programa"      { return PROGRAMA; }
-"entero"        { return ENTERO; }
-"leer"          { return LEER; }
-"escribir"      { return ESCRIBIR; }
-"fin"           { return FIN; }
-":="            { return ASIGNACION; }
-"+"             { return '+'; }
-"-"             { return '-'; }
-"*"             { return '*'; }
-"/"             { return '/'; }
-"%"             { return '%'; }
-"("             { return PARENTESIS_ABRE; }
-")"             { return PARENTESIS_CIERRA; }
-","             { return ','; }
-";"             { return ';'; }
+letra [[:alpha:]]
+digito [[:digit:]]
 
-[a-zA-Z][a-zA-Z0-9]*  { yylval = strdup(yytext); return IDENTIFICADOR; }
-[0-9]+               { yylval = strdup(yytext); return CONSTANTE; }
+operador_primario [+-]
+operador_secundario [*/%]
 
-"//".*              { /* Ignorar comentarios */ }
-[ \t\n]+            { /* Ignorar espacios y saltos de línea */ }
-
-. {
-    fprintf(stderr, "Línea #%d: Error léxico: cadena desconocida: %s\n", yylineno, yytext);
-    erroresLexicos++;
-}
+identificador {letra}({letra}|{digito})*
+constante {digito}+
+palabra_reservada programa|entero|leer|escribir|fin-programa
+asignacion :=
 
 %%
 
-int yywrap(void) {
-    return 1;
-}
+"programa" { return PROGRAMA; }
+
+"entero" { return ENTERO; }
+
+"leer" { return LEER; }
+
+"escribir" { return ESCRIBIR; }
+
+"fin" { return FIN_PROGRAMA; }
+
+{espacio_en_blanco}+ {} /* ignorar nuevas lineas, tabuladores y espacios */
+
+{comentario} {} /* ignorar comentarios */
+
+{caracter_invalido}+ { ERROR_LEXICO("cadena invalida"); }
+
+{asignacion} { return ASIGNACION; }
+
+{identificador} { yylval = strdup(yytext); return IDENTIFICADOR; }
+
+{constante} { yylval = strdup(yytext); return CONSTANTE; }
+
+{constante}({caracter_invalido}|{letra})({caracter_invalido}|{letra}|{digito})* { ERROR_LEXICO("constante invalida"); }
+
+{identificador}{caracter_invalido}({caracter_invalido}|{letra}|{digito})*  { ERROR_LEXICO("identificador invalido"); }
+
+"+" { return '+'; }
+
+"-" { return '-'; }
+
+"*" { return '*'; }
+
+"/" { return '/'; }
+
+"%" { return '%'; }
+
+"(" { return '('; }
+
+")" { return ')'; }
+
+"," { return ','; }
+
+";" { return ';'; }
+
+. { ERROR_LEXICO("caracter desconocido"); }
+
+%%
