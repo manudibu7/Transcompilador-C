@@ -1,27 +1,39 @@
-
-#include <stdio.h>
-#include "parser.h"
-#include "scanner.h"
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "parser.h"
+#include "scanner.h"
 
+#define YYACCEPT 0
+#define YYABORT 1
+#define YYNOMEM 2
 
-int yyparse();
+int yylexerrs = 0; //error lexico
+int yysemerrs = 0; //erorr semantico
 
-extern int erroresLexicos;
-extern int erroresSintacticos;
-extern int erroresSemanticos;
+extern int yynerrs; //error sintactico
 
-int main() {
-    // Llamamos al parser
-    if (yyparse() == 0) {
-    } else {
-        printf("Errores encontrados:\n");
-        if (erroresLexicos > 0) printf(" - Léxicos: %d\n", erroresLexicos);
-        if (erroresSintacticos > 0) printf(" - Sintácticos: %d\n", erroresSintacticos);
-        if (erroresSemanticos > 0) printf(" - Semánticos: %d\n", erroresSemanticos);
+int main(void)
+{
+    unsigned int exit_code = 0;
+
+    switch (yyparse())
+    {
+    case YYACCEPT:
+        printf("Compilacion terminada con exito\n");
+        exit_code = YYACCEPT;
+        break;
+    case YYABORT:
+        printf("Errores de compilacion\n");
+        exit_code = YYABORT;
+        break;
+    case YYNOMEM:
+        printf("Memoria insuficiente\n");
+        exit_code = YYNOMEM;
+        break;
     }
 
-    return 0;
+    printf("Errores sintacticos: %d - Errores lexicos: %d - Errores semanticos: %d\n", yynerrs, yylexerrs, yysemerrs);
+
+    return exit_code;
 }
