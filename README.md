@@ -1,37 +1,57 @@
+# Transcompilador de mini a C
 
-# TPs GRUPO 14
+Este repositorio contiene el trabajo práctico desarrollado para la asignatura **Sintaxis y Semántica de los Lenguajes** (k2002) en la UTN - Facultad Regional de Buenos Aires, bajo la supervisión del Prof. Eduardo Zuñiga durante el año 2024.
 
-## Integrantes
+## Descripción
 
- **Rodrigo, Juan Manuel** :
-- Nombre git-hub : jrodrigoutn
-- Mail : jrodrigo@frba.utn.edu.ar
+El proyecto consiste en la implementación de un **transcompilador** que traduce código escrito en el lenguaje **mini** a código en **C**. Para ello se han desarrollado los siguientes componentes:
 
-**Cervini Adriano** :
-- Nombre git-hub : 
-- Mail : acervini@frba.utn.edu.ar
+- **Scanner**: Implementado en Flex, encargado de analizar y tokenizar la entrada.
+- **Parser**: Implementado en Bison, encargado de analizar la estructura sintáctica y construir el flujo de traducción.
 
- **Faella, Mateo**: 
-- Nombre git-hub : mateofaella0
-- Mail : mfaella@frba.utn.edu.ar
+El objetivo del proyecto es afianzar los conocimientos en análisis semantico, léxico y sintáctico, así como en la construcción de un transcompilador.
 
- **Pieroni, Juan Ignacio**:
-- Nombre git-hub : JIPieroni
-- Mail : jpieroni@frba.utn.edu.ar
+## Contenido del Repositorio
 
-**Di Bucci, Manuel**
-- Nombre git-hub : manudibu7
-- Mail : mdibucci@frba.utn.edu.ar
+- `scanner.l`: Código fuente del scanner en Flex.
+- `parser.y`: Código fuente del parser en Bison.
+- `main.c`: Programa principal que integra los componentes del transcompilador.
+- `Makefile`: Archivo de compilación para generar el ejecutable.
+- Otros archivos y documentación complementaria.
 
+## Requisitos
 
+- GNU Flex
+- GNU Bison
+- Compilador de C (gcc)
+- Make
 
+## Instrucciones de Compilación y Ejecución
 
+1. **Clonar el repositorio:**
+   ```bash
+   git clone <URL_DEL_REPOSITORIO>
 
-## UTN
+2. **Compilar el proyecto usando make:**
+   ```bash
+    make
 
-- Facultad Regional de Buenos Aires
-- **Sintaxis y Semantica de los lenguajes** k2002
-- Prof. Eduardo Zuñiga
-- Año 2024
+3. **Ejecutar el transcompilador redireccionando un archivo de entrada**
+   ```bash
+    ./mini < archivo_de_entrada.txt
+
+## Autor
+**Manuel Di Bucci**
+
+## Asignatura
+**Sintaxis y Semántica de los Lenguajes (k2002)**  
+UTN - Facultad Regional de Buenos Aires  
+Año 2024
+
+## Profesor
+**Prof. Eduardo Zuñiga**
+
+## Licencia
+Este proyecto es de uso académico y se distribuye con fines educativos.
 
 
