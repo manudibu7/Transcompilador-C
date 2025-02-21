@@ -30,7 +30,7 @@ El objetivo del proyecto es afianzar los conocimientos en análisis semantico, l
 
 1. **Clonar el repositorio:**
    ```bash
-   git clone <URL_DEL_REPOSITORIO>
+   git clone https://github.com/manudibu7/Transcompilador-C.git
 
 2. **Compilar el proyecto usando make:**
    ```bash
@@ -38,7 +38,7 @@ El objetivo del proyecto es afianzar los conocimientos en análisis semantico, l
 
 3. **Ejecutar el transcompilador redireccionando un archivo de entrada**
    ```bash
-    ./mini < archivo_de_entrada.txt
+    ./mini < entrada.txt
 
 ## Autor
 **Manuel Di Bucci**
